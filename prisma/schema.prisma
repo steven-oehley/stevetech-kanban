@@ -1,0 +1,107 @@
+// Prisma 7 no longer accepts `url`/`directUrl` inside the datasource block —
+// both connection URLs live in ../prisma.config.ts and are read from env:
+//   DATABASE_URL  pooled  → the app's runtime connection (src/lib/prisma.ts)
+//   DIRECT_URL    direct  → Prisma Migrate (the pooler can't hold DDL sessions)
+// Neither is ever hardcoded.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  /// Mirror of the host's `entitlements` userinfo claim, refreshed at sign-in.
+  entitlements  String[]  @default([])
+  sessions      Session[]
+  accounts      Account[]
+  cards         Card[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+/// The board's three fixed columns. An enum rather than a free string because
+/// the target column arrives from the browser on every drop.
+enum BoardColumn {
+  TODO
+  DOING
+  DONE
+}
+
+/// The one domain table. `userId` carries the local session's user id and every
+/// query is scoped by it — this app never trusts a client-supplied owner.
+///
+/// `order` is a sparse position within a column, rewritten for the whole column
+/// on each drop, so ties can never make the board render non-deterministically.
+model Card {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  column    BoardColumn @default(TODO)
+  order     Int
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([userId, column, order])
+  @@map("card")
+}
