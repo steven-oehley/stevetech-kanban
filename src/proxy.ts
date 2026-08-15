@@ -48,11 +48,15 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // No zone session — but the user very likely has a host one, so start the
+  // handshake instead of showing a second sign-in button they'd have to click.
+  // api/start-signin falls back to /kanban/login if it can't get them in.
+  //
   // The prefix is spelled out here: this is an absolute URL on the *host's*
   // origin, which Next passes through untouched rather than prepending the
   // app's basePath to (unlike `redirect()` in a page — see lib/session.ts).
-  const loginUrl = new URL("/kanban/login", publicOrigin(request));
-  return NextResponse.redirect(loginUrl);
+  const signInUrl = new URL("/kanban/api/start-signin", publicOrigin(request));
+  return NextResponse.redirect(signInUrl);
 }
 
 export const config = {
@@ -68,6 +72,8 @@ export const config = {
     "/",
     // api/backchannel-logout is excluded too: the host calls it server-to-server
     // with no cookie, and it authenticates itself with a signed Logout Token.
-    "/((?!login|api/auth|api/backchannel-logout|_next/static|_next/image|favicon.ico).*)",
+    // api/start-signin is excluded for the obvious reason: it is where this
+    // proxy sends sessionless traffic, so guarding it would redirect to itself.
+    "/((?!login|api/auth|api/start-signin|api/backchannel-logout|_next/static|_next/image|favicon.ico).*)",
   ],
 };
