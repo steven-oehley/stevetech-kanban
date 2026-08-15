@@ -11,6 +11,23 @@ import { NextResponse, type NextRequest } from "next/server";
 const SESSION_COOKIE = "kanban.session_token";
 
 /**
+ * Better Auth prefixes its cookies with `__Secure-` whenever the resolved
+ * baseURL is https — so the very same cookie is `kanban.session_token` against
+ * localhost and `__Secure-kanban.session_token` in production. Checking only the
+ * bare name passes in dev and then bounces every signed-in user straight back to
+ * /kanban/login on the live site.
+ *
+ * Better Auth's own session lookup tries both spellings, and the host's
+ * sign-out action strips the prefix for the same reason; this mirrors them.
+ */
+function hasSessionCookie(request: NextRequest): boolean {
+  return (
+    request.cookies.has(SESSION_COOKIE) ||
+    request.cookies.has(`__Secure-${SESSION_COOKIE}`)
+  );
+}
+
+/**
  * The browser always reaches this zone through the host's proxy, so a redirect
  * must point at the host's origin (localhost:3000 / stevetech.co.za) — never at
  * this app's own port, which would drop the user out of the proxy and break the
@@ -27,7 +44,7 @@ function publicOrigin(request: NextRequest): string {
 }
 
 export function proxy(request: NextRequest) {
-  if (request.cookies.has(SESSION_COOKIE)) {
+  if (hasSessionCookie(request)) {
     return NextResponse.next();
   }
 
