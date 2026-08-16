@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
+
+import { THEME_COOKIE, THEME_INIT_SCRIPT, isTheme } from "@/lib/theme";
+
 import "./globals.css";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
@@ -17,13 +21,27 @@ export const metadata: Metadata = {
   description: "A simple board for your work.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // The same cookie the host writes. Because every zone is served from the
+  // host's origin, switching to dark on the dashboard means this app is already
+  // dark on arrival — no flash, and no per-app preference to keep in step.
+  const theme = (await cookies()).get(THEME_COOKIE)?.value;
+
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased ${
+        isTheme(theme) && theme === "dark" ? "dark" : ""
+      }`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+          id="theme-init"
+        />
+      </head>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

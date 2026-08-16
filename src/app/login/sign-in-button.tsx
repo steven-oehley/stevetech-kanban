@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { signIn } from "@/lib/auth-client";
 
 /**
@@ -24,10 +25,14 @@ export function SignInButton() {
           // resolved against the host's origin, not against our basePath.
           callbackURL: "/kanban",
         });
-        // On success the browser has already left for the host.
+        // On success the browser has already left for the host — the pending
+        // state deliberately stays up until it does, so the button never
+        // returns to idle while a navigation is still in flight.
         if (error) setPending(false);
       }}
+      size="lg"
     >
+      {pending && <Spinner />}
       {pending ? "Redirecting…" : "Continue with SteveTech"}
     </Button>
   );

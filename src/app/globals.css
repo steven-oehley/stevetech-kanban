@@ -27,6 +27,10 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -48,73 +52,99 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/**
+ * SteveTech palette — a cool slate neutral carrying a single teal accent.
+ *
+ * The neutrals are very slightly blue (a few thousandths of chroma around hue
+ * 220) rather than pure grey. It is not consciously visible, but it stops large
+ * flat surfaces reading as the dead newsprint grey that oklch(x 0 0) gives, and
+ * it keeps the teal from looking like it was dropped in from another palette.
+ *
+ * Teal earns its keep by being reserved: primary actions, focus rings, the
+ * active nav tab and nothing else. Every neutral surface stays neutral, so the
+ * one place colour appears is the place we want the eye to go.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.994 0.002 220);
+  --foreground: oklch(0.21 0.018 240);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.21 0.018 240);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --popover-foreground: oklch(0.21 0.018 240);
+  --primary: oklch(0.55 0.098 187);
+  --primary-foreground: oklch(0.99 0.008 180);
+  --secondary: oklch(0.965 0.006 220);
+  --secondary-foreground: oklch(0.28 0.02 235);
+  --muted: oklch(0.968 0.005 220);
+  --muted-foreground: oklch(0.522 0.021 235);
+  --accent: oklch(0.955 0.026 188);
+  --accent-foreground: oklch(0.36 0.072 190);
+  --destructive: oklch(0.58 0.208 25.5);
+  --success: oklch(0.58 0.108 165);
+  --success-foreground: oklch(0.99 0.008 170);
+  --warning: oklch(0.72 0.148 72);
+  --warning-foreground: oklch(0.26 0.05 70);
+  --border: oklch(0.912 0.006 225);
+  --input: oklch(0.906 0.007 225);
+  --ring: oklch(0.55 0.098 187);
+  --chart-1: oklch(0.55 0.098 187);
+  --chart-2: oklch(0.66 0.086 199);
+  --chart-3: oklch(0.74 0.072 211);
+  --chart-4: oklch(0.44 0.082 193);
+  --chart-5: oklch(0.33 0.06 197);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.982 0.004 220);
+  --sidebar-foreground: oklch(0.21 0.018 240);
+  --sidebar-primary: oklch(0.55 0.098 187);
+  --sidebar-primary-foreground: oklch(0.99 0.008 180);
+  --sidebar-accent: oklch(0.955 0.026 188);
+  --sidebar-accent-foreground: oklch(0.36 0.072 190);
+  --sidebar-border: oklch(0.912 0.006 225);
+  --sidebar-ring: oklch(0.55 0.098 187);
 }
 
+/**
+ * Dark is not the light palette inverted. Backgrounds lift slightly with each
+ * layer (background → card → muted) so panels separate without borders doing
+ * all the work, and the teal moves lighter and less saturated — the same hue at
+ * full light-mode chroma vibrates badly against a dark ground.
+ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --background: oklch(0.176 0.013 240);
+  --foreground: oklch(0.958 0.005 220);
+  --card: oklch(0.216 0.015 240);
+  --card-foreground: oklch(0.958 0.005 220);
+  --popover: oklch(0.232 0.016 240);
+  --popover-foreground: oklch(0.958 0.005 220);
+  --primary: oklch(0.735 0.104 184);
+  --primary-foreground: oklch(0.19 0.032 200);
+  --secondary: oklch(0.272 0.016 238);
+  --secondary-foreground: oklch(0.958 0.005 220);
+  --muted: oklch(0.268 0.015 238);
+  --muted-foreground: oklch(0.712 0.019 225);
+  --accent: oklch(0.318 0.038 195);
+  --accent-foreground: oklch(0.9 0.056 185);
+  --destructive: oklch(0.702 0.176 22);
+  --success: oklch(0.72 0.112 168);
+  --success-foreground: oklch(0.19 0.03 170);
+  --warning: oklch(0.79 0.132 76);
+  --warning-foreground: oklch(0.22 0.045 70);
+  --border: oklch(1 0 0 / 11%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --ring: oklch(0.735 0.104 184);
+  --chart-1: oklch(0.735 0.104 184);
+  --chart-2: oklch(0.65 0.086 199);
+  --chart-3: oklch(0.55 0.072 211);
+  --chart-4: oklch(0.82 0.086 180);
+  --chart-5: oklch(0.45 0.06 197);
+  --sidebar: oklch(0.204 0.014 240);
+  --sidebar-foreground: oklch(0.958 0.005 220);
+  --sidebar-primary: oklch(0.735 0.104 184);
+  --sidebar-primary-foreground: oklch(0.19 0.032 200);
+  --sidebar-accent: oklch(0.318 0.038 195);
+  --sidebar-accent-foreground: oklch(0.9 0.056 185);
+  --sidebar-border: oklch(1 0 0 / 11%);
+  --sidebar-ring: oklch(0.735 0.104 184);
 }
 
 @layer base {
@@ -126,5 +156,92 @@
   }
   html {
     @apply font-sans;
+    /* Tells the browser to theme its own furniture — scrollbars, native form
+       controls, the flash of background before paint — to match. Without it a
+       dark page keeps light scrollbars. */
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+
+  /* Headings sit tighter than the default: at these weights the stock line
+     height leaves titles looking unmoored from the text they introduce. */
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
+    text-wrap: balance;
+  }
+
+  /* Long-form copy reads better when it never breaks to a one-word last line. */
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/**
+ * Everything below is the loading vocabulary the whole platform shares: no
+ * action should ever leave the UI looking dead, and these are the three ways it
+ * says "working" — a spinner inside the control you pressed, a shimmer where
+ * content will land, and a bar at the top of the window for navigation.
+ */
+@layer components {
+  /* A skeleton block. Deliberately low contrast: it is scaffolding, and it
+     must not read as content that has finished loading. */
+  .skeleton {
+    @apply bg-muted relative overflow-hidden rounded-md;
+  }
+
+  .skeleton::after {
+    @apply absolute inset-0 -translate-x-full;
+    content: "";
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklch, var(--foreground) 6%, transparent),
+      transparent
+    );
+    animation: skeleton-sweep 1.6s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-sweep {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* The indeterminate top-of-window bar for route changes. It never claims a
+     percentage, because we do not know one — it just proves the app is alive. */
+  .route-progress {
+    @apply bg-primary fixed inset-x-0 top-0 z-100 h-0.5 origin-left;
+    animation: route-progress 2s ease-out forwards;
+  }
+
+  @keyframes route-progress {
+    0% {
+      transform: scaleX(0);
+    }
+    /* Decelerating and stalling near the end is the honest shape: it conveys
+       progress without ever promising completion it cannot deliver. */
+    60% {
+      transform: scaleX(0.75);
+    }
+    100% {
+      transform: scaleX(0.92);
+    }
+  }
+}
+
+/* Respect the system setting. Spinners keep turning — a spinner that does not
+   move is worse than none — but everything decorative stops. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after,
+  .route-progress {
+    animation: none;
+  }
+
+  .skeleton::after {
+    display: none;
   }
 }

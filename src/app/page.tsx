@@ -17,6 +17,13 @@ export default async function BoardPage() {
       <AppHeader userName={user.name} />
 
       <main className="mx-auto w-full max-w-5xl px-6 py-10">
+        <div className="mb-6 space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Your board</h1>
+          <p className="text-muted-foreground text-sm">
+            Drag a card between columns — it saves as you drop it.
+          </p>
+        </div>
+
         <Board cards={cards} />
       </main>
     </>

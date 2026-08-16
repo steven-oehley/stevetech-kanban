@@ -19,12 +19,16 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { GripVerticalIcon, PlusIcon, XIcon } from "lucide-react";
 import { useState, useTransition } from "react";
+import { useFormStatus } from "react-dom";
 
 import { createCard, deleteCard, moveCard } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { COLUMNS, type BoardColumn, type CardView } from "@/lib/board";
+import { cn } from "@/lib/utils";
 
 type Lists = Record<BoardColumn, CardView[]>;
 
@@ -45,9 +49,22 @@ function findColumn(lists: Lists, cardId: string): BoardColumn | null {
   return null;
 }
 
+/** Tints the column header so the three lanes read apart at a glance. */
+const COLUMN_ACCENT: Record<BoardColumn, string> = {
+  TODO: "bg-muted-foreground/40",
+  DOING: "bg-primary",
+  DONE: "bg-success",
+};
+
 export function Board({ cards }: { cards: CardView[] }) {
   const [lists, setLists] = useState<Lists>(() => groupByColumn(cards));
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // A drop rewrites the whole column's positions in a transaction, which is
+  // quick but not free. The optimistic move lands instantly, so without this
+  // there is no sign at all that anything is being written — and a reload
+  // during that window silently loses the move.
+  const [savingMove, startMoveTransition] = useTransition();
 
   // Re-sync whenever a server action revalidates the page: the server is the
   // source of truth, the local copy only exists to make dragging feel instant.
@@ -103,10 +120,12 @@ export function Board({ cards }: { cards: CardView[] }) {
 
     setLists(next);
 
-    void moveCard({
-      cardId,
-      column: to,
-      orderedIds: target.map((entry) => entry.id),
+    startMoveTransition(async () => {
+      await moveCard({
+        cardId,
+        column: to,
+        orderedIds: target.map((entry) => entry.id),
+      });
     });
   }
 
@@ -127,7 +146,15 @@ export function Board({ cards }: { cards: CardView[] }) {
       onDragStart={handleDragStart}
       sensors={sensors}
     >
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/*
+        Above the grid rather than inside the To Do column. Nested, it pushed
+        that one column's drop zone down by the height of the input and the
+        three lanes no longer lined up — which made the board look broken
+        rather than deliberate.
+      */}
+      <AddCardForm />
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
         {COLUMNS.map((column) => (
           <Column
             cards={lists[column.id]}
@@ -139,8 +166,29 @@ export function Board({ cards }: { cards: CardView[] }) {
       </div>
 
       <DragOverlay>
-        {activeCard ? <CardShell title={activeCard.title} /> : null}
+        {activeCard ? (
+          <CardShell dragging title={activeCard.title} />
+        ) : null}
       </DragOverlay>
+
+      {/*
+        Fixed to the corner rather than placed in the layout: it appears and
+        disappears constantly while rearranging a board, and anything that
+        reserves space would make the columns twitch on every drop.
+      */}
+      <div
+        aria-live="polite"
+        className={cn(
+          "bg-card fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border py-1.5 pr-4 pl-3 text-sm shadow-lg transition-all duration-200",
+          savingMove
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-2 opacity-0",
+        )}
+        role="status"
+      >
+        <Spinner className="size-3.5" />
+        <span className="text-muted-foreground">Saving…</span>
+      </div>
     </DndContext>
   );
 }
@@ -159,17 +207,22 @@ function Column({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-muted-foreground text-sm font-medium">
+      <h2 className="flex items-center gap-2 text-sm font-medium">
+        <span
+          aria-hidden
+          className={cn("size-2 rounded-full", COLUMN_ACCENT[id])}
+        />
         {label}
-        <span className="ml-2 tabular-nums">{cards.length}</span>
+        <span className="bg-muted text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-xs tabular-nums">
+          {cards.length}
+        </span>
       </h2>
 
-      {id === "TODO" && <AddCardForm />}
-
       <div
-        className={`bg-muted/40 flex min-h-32 flex-col gap-2 rounded-lg p-2 ${
-          isOver ? "ring-ring ring-2" : ""
-        }`}
+        className={cn(
+          "bg-muted/40 flex min-h-40 flex-col gap-2 rounded-xl border border-transparent p-2 transition-colors",
+          isOver && "border-primary/50 bg-accent/40",
+        )}
         ref={setNodeRef}
       >
         <SortableContext
@@ -180,6 +233,12 @@ function Column({
             <SortableCard card={card} key={card.id} />
           ))}
         </SortableContext>
+
+        {cards.length === 0 && (
+          <p className="text-muted-foreground/70 flex flex-1 items-center justify-center py-6 text-center text-xs">
+            Drop a card here
+          </p>
+        )}
       </div>
     </section>
   );
@@ -206,32 +265,61 @@ function SortableCard({ card }: { card: CardView }) {
   );
 }
 
+/**
+ * The delete control. It reads its own form's status rather than taking a
+ * pending prop, so each card reports independently — deleting one card must
+ * not make every other card's button look busy.
+ */
+function DeleteCardButton({ title }: { title: string }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      aria-label={pending ? `Deleting "${title}"` : `Delete "${title}"`}
+      className="text-muted-foreground hover:text-destructive opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 aria-disabled:opacity-100"
+      disabled={pending}
+      size="icon-xs"
+      type="submit"
+      variant="ghost"
+    >
+      {pending ? <Spinner className="size-3" /> : <XIcon />}
+    </Button>
+  );
+}
+
 function CardShell({
+  dragging,
   dragProps,
   id,
   title,
 }: {
+  dragging?: boolean;
   dragProps?: Record<string, unknown>;
   id?: string;
   title: string;
 }) {
   return (
-    <div className="bg-background flex items-start gap-2 rounded-md border p-2 shadow-xs">
-      <span className="flex-1 cursor-grab text-sm" {...dragProps}>
+    <div
+      className={cn(
+        "bg-card group flex items-start gap-1.5 rounded-lg border p-2.5 shadow-xs transition-shadow",
+        dragging ? "shadow-lg" : "hover:shadow-sm",
+      )}
+    >
+      <span
+        aria-hidden
+        className="text-muted-foreground/40 mt-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+      >
+        <GripVerticalIcon className="size-3.5" />
+      </span>
+
+      <span className="flex-1 cursor-grab text-sm leading-snug" {...dragProps}>
         {title}
       </span>
 
       {id && (
         <form action={deleteCard}>
           <input name="id" type="hidden" value={id} />
-          <Button
-            aria-label={`Delete "${title}"`}
-            className="h-6 px-2 text-xs"
-            type="submit"
-            variant="ghost"
-          >
-            ✕
-          </Button>
+          <DeleteCardButton title={title} />
         </form>
       )}
     </div>
@@ -250,16 +338,18 @@ function AddCardForm() {
           setTitle("");
         })
       }
-      className="flex gap-2"
+      className="flex max-w-lg gap-2"
     >
       <Input
-        aria-label="Add a card"
+        aria-label="Add a card to To Do"
+        disabled={pending}
         name="title"
         onChange={(event) => setTitle(event.target.value)}
-        placeholder="Add a card…"
+        placeholder="Add a card to To Do…"
         value={title}
       />
       <Button disabled={pending || title.trim() === ""} type="submit">
+        {pending ? <Spinner className="size-3.5" /> : <PlusIcon />}
         Add
       </Button>
     </form>
