@@ -8,11 +8,19 @@ const APP_KEY = "kanban";
 
 /**
  * Relative, without the /kanban prefix: Next prepends this app's basePath to
- * `redirect()` targets, so "/login" reaches the browser as /kanban/login — and
- * the browser resolves that against the host's origin, since every request
- * arrives through the host proxy.
+ * `redirect()` targets, so this reaches the browser as /kanban/api/start-signin
+ * — and the browser resolves that against the host's origin, since every
+ * request arrives through the host proxy.
+ *
+ * This re-runs the handshake rather than pointing at /login, because the case
+ * that lands here is a *stale* session cookie: the proxy only tests that the
+ * cookie exists, so an expired or revoked one sails past it and fails here
+ * instead. Sending those users to a login button would strand anybody holding
+ * one behind a manual click forever — they have a perfectly good host session,
+ * so just spend it. start-signin's loop guard falls back to /kanban/login if
+ * the handshake still doesn't produce a usable session.
  */
-const LOGIN_PATH = "/login";
+const SIGN_IN_PATH = "/api/start-signin";
 const NO_LICENSE_URL = `${HOST_URL}/dashboard?error=no-license`;
 
 export type LicensedUser = {
@@ -33,7 +41,7 @@ export async function requireLicensedUser(): Promise<LicensedUser> {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session) {
-    redirect(LOGIN_PATH);
+    redirect(SIGN_IN_PATH);
   }
 
   const entitlements = (session.user as { entitlements?: unknown }).entitlements;
